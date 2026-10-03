@@ -179,3 +179,27 @@ AROSVirtualDisplay RFB transport and may run concurrently. The VM still sees
 only its normal virtio-vga display. See tools/XRDisplayBridge/README.md for
 setup, architecture, lifecycle, diagnostics, and the future OpenXR proxy
 boundary.
+
+## Normal and debug VM profiles
+
+The VM defaults to a normal OS-style boot:
+
+    ./scripts/build-vm.sh
+    ./scripts/run-vm.sh
+
+Debug mode enables the headless virtio-vga display exported over loopback RFB
+for the Device Emulator and XR Display Bridge. It also automatically logs the
+aros user, and enables the Nix CLI/daemon with nix-command and flakes.
+aros user into tty1 and runs:
+
+    tmux new-session -A -s aros
+
+Build and run that profile explicitly:
+
+    ./scripts/build-vm.sh --debug
+    ./scripts/run-vm.sh --debug
+
+The equivalent CMake targets are build-vm/run-vm and
+build-vm-debug/run-vm-debug. Normal and debug modes use separate persistent
+disks under .vm so switching profiles does not mix mutable guest state. SSH is
+available in both modes.

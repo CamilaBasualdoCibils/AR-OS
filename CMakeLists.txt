@@ -46,3 +46,20 @@ add_custom_target(
 )
 add_dependencies(run-xr-display AROSXRDisplayBridge)
 endif()
+
+add_custom_target(
+    build-vm-debug
+    COMMAND "${CMAKE_SOURCE_DIR}/scripts/build-vm.sh" --debug
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    COMMENT "Building the AR-OS NixOS VM in debug mode"
+    USES_TERMINAL
+)
+
+add_custom_target(
+    run-vm-debug
+    COMMAND "${CMAKE_SOURCE_DIR}/scripts/run-vm.sh" --debug
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    COMMENT "Running the AR-OS VM with debug display and tmux console"
+    USES_TERMINAL
+)
+add_dependencies(run-vm-debug build-vm-debug)

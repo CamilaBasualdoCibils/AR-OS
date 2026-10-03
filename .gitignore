@@ -3,4 +3,3 @@
 /result-*
 /vcpkg_installed/
 /.vm/
-flake.lock

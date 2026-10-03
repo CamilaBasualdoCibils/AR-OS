@@ -1,19 +1,20 @@
 {
   description = "AR-OS standalone NixOS image and native software";
-
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-  };
-
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   outputs = { self, nixpkgs }:
     let
       system = "x86_64-linux";
-      vmSystem = nixpkgs.lib.nixosSystem {
+      makeVm = arosDebug: nixpkgs.lib.nixosSystem {
         inherit system;
+        specialArgs = { inherit arosDebug; };
         modules = [ ./nix/systems/vm.nix ];
       };
-    in
-    {
-      packages.${system}.vm = vmSystem.config.system.build.vm;
+      normalVm = makeVm false;
+      debugVm = makeVm true;
+    in {
+      packages.${system} = {
+        vm = normalVm.config.system.build.vm;
+        vm-debug = debugVm.config.system.build.vm;
+      };
     };
 }
