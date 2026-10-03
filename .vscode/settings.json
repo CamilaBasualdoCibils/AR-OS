@@ -1,0 +1,6 @@
+{
+    "cmake.configureArgs": [
+        "--preset=vcpkg-preset"
+    ],
+    "C_Cpp.intelliSenseEngine": "disabled"
+}
