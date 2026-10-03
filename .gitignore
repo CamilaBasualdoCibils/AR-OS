@@ -3,3 +3,5 @@
 /result-*
 /vcpkg_installed/
 /.vm/
+
+imgui.ini
