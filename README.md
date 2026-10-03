@@ -21,9 +21,9 @@ than being added to the root CMake project.
 
 The shared OS is intended to support QEMU, desktop OpenXR runtimes, development
 boards, and physical glasses. Backend-specific software stays out of shared
-configuration. M0 includes an empty host-side `AROSDeviceEmulator` development
-target; it is not installed in the minimal OS image and does not yet emulate
-hardware or define a protocol.
+configuration. The host-side `AROSDeviceEmulator` mirrors the VM display as fake XR hardware.
+The separate XR Display Bridge presents that display through the active host
+OpenXR runtime. Neither host tool is installed in the minimal OS image.
 
 The two similarly named development tools are deliberately unrelated:
 
@@ -75,8 +75,8 @@ Manifest mode supplies GLFW and Dear ImGui to the emulator target. ARUI keeps
 its own independent `AR-UI/vcpkg.json` manifest.
 
 Use `-DAROS_BUILD_DEVICE_EMULATOR=OFF` for a production-oriented native build.
-The emulator links GLFW and Dear ImGui but its source is intentionally only an
-empty `main()` at M0.
+The emulator links GLFW and Dear ImGui and consumes the shared RFB virtual-display
+transport.
 
 ## Build and run the VM
 
@@ -120,9 +120,9 @@ Device Emulator through QEMU's loopback RFB display. The secondary `ttyS0`
 console is retained in `.vm/serial.log`; it is not attached to the terminal that
 launched `run-vm`.
 
-The Device Emulator is the visible host-side fake XR device. QEMU itself uses
-an accelerated EGL headless display; the emulator currently starts disconnected
-until a VM transport is implemented. See `tools/DeviceEmulator/README.md`.
+The Device Emulator is the visible host-side fake XR device. QEMU publishes its
+headless virtual display through loopback RFB; both the emulator and XR bridge
+consume it through the shared transport. See `tools/DeviceEmulator/README.md`.
 
 The VM is intentionally a small diagnostics image, not a development
 environment. It contains no ARUI, Device Emulator, compiler, source-control
@@ -160,8 +160,22 @@ AR-OS provides it as a thin alias for Khronos' `openxr_runtime_list`.
 
 ## Current limitations
 
-M0 does not yet provide an XR device protocol, emulator UI, ARUI shell process,
-automatic graphical session, or physical-device/OpenXR integration. These are
+The VM does not yet provide an XR device protocol, ARUI shell process, automatic
+graphical session, or in-guest OpenXR integration. These are
 explicit future integration points. They will be added only when the device OS
 needs them; the current VM exists solely to prove boot and report graphics
 capabilities.
+
+## XR Display Bridge
+
+To view the boot console on a Quest 2 through WiVRn, start WiVRn and connect the
+headset, then build AROSXRDisplayBridge and run:
+
+    ./scripts/run-xr-display.sh
+    ./scripts/run-vm.sh
+
+The bridge and Device Emulator are independent consumers of the shared
+AROSVirtualDisplay RFB transport and may run concurrently. The VM still sees
+only its normal virtio-vga display. See tools/XRDisplayBridge/README.md for
+setup, architecture, lifecycle, diagnostics, and the future OpenXR proxy
+boundary.

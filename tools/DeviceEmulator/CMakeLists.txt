@@ -23,6 +23,7 @@ target_link_libraries(
         glfw
         imgui::imgui
         OpenGL::GL
+        AROSVirtualDisplay
 )
 
 set_target_properties(AROSDeviceEmulator PROPERTIES OUTPUT_NAME ar-os-device-emulator)

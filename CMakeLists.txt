@@ -11,6 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(AROS_BUILD_DEVICE_EMULATOR "Build the VM/development XR device emulator" ON)
+option(AROS_BUILD_XR_DISPLAY_BRIDGE "Build the host OpenXR virtual-display bridge" ON)
 
 include(GNUInstallDirs)
 
@@ -34,3 +35,14 @@ add_custom_target(
 )
 
 add_dependencies(run-vm build-vm)
+
+if(AROS_BUILD_XR_DISPLAY_BRIDGE)
+add_custom_target(
+    run-xr-display
+    COMMAND "${CMAKE_SOURCE_DIR}/scripts/run-xr-display.sh"
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    COMMENT "Running the AR-OS XR Display Bridge"
+    USES_TERMINAL
+)
+add_dependencies(run-xr-display AROSXRDisplayBridge)
+endif()
