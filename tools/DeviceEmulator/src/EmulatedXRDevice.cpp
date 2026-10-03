@@ -35,6 +35,8 @@ EmulatedXRDevice::EmulatedXRDevice()
 {
     const auto placeholder = MakePlaceholderPixels();
     SubmitBootImage(kPlaceholderWidth, kPlaceholderHeight, placeholder);
+    StoreImage(openXRLeftEye_, kPlaceholderWidth, kPlaceholderHeight, placeholder);
+    StoreImage(openXRRightEye_, kPlaceholderWidth, kPlaceholderHeight, placeholder);
 }
 
 void EmulatedXRDevice::SubmitBootImage(
@@ -42,10 +44,7 @@ void EmulatedXRDevice::SubmitBootImage(
     const std::uint32_t height,
     const std::span<const std::uint8_t> rgbaPixels)
 {
-    StoreImage(leftEye_, width, height, rgbaPixels);
-    StoreImage(rightEye_, width, height, rgbaPixels);
-    mode_ = DeviceMode::BootDisplay;
-    openXRSessionActive_ = false;
+    StoreImage(bootImage_, width, height, rgbaPixels);
 }
 
 void EmulatedXRDevice::SubmitEyeImage(
@@ -54,15 +53,13 @@ void EmulatedXRDevice::SubmitEyeImage(
     const std::uint32_t height,
     const std::span<const std::uint8_t> rgbaPixels)
 {
-    StoreImage(eye == Eye::Left ? leftEye_ : rightEye_, width, height, rgbaPixels);
+    StoreImage(eye == Eye::Left ? openXRLeftEye_ : openXRRightEye_,
+               width, height, rgbaPixels);
 }
 
 void EmulatedXRDevice::SetMode(const DeviceMode mode) noexcept
 {
     mode_ = mode;
-    if (mode_ != DeviceMode::OpenXR) {
-        openXRSessionActive_ = false;
-    }
 }
 
 void EmulatedXRDevice::SetConnected(const bool connected) noexcept
@@ -75,12 +72,19 @@ void EmulatedXRDevice::SetConnected(const bool connected) noexcept
 
 void EmulatedXRDevice::SetOpenXRSessionActive(const bool active) noexcept
 {
-    openXRSessionActive_ = active && connected_ && mode_ == DeviceMode::OpenXR;
+    const bool wasActive = openXRSessionActive_;
+    openXRSessionActive_ = active && connected_;
+    if (openXRSessionActive_ && !wasActive) {
+        mode_ = DeviceMode::OpenXR;
+    }
 }
 
 const EyeImage& EmulatedXRDevice::Image(const Eye eye) const noexcept
 {
-    return eye == Eye::Left ? leftEye_ : rightEye_;
+    if (mode_ == DeviceMode::BootDisplay) {
+        return bootImage_;
+    }
+    return eye == Eye::Left ? openXRLeftEye_ : openXRRightEye_;
 }
 
 DeviceMode EmulatedXRDevice::Mode() const noexcept { return mode_; }

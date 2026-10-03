@@ -6,7 +6,7 @@
 #include <memory>
 
 int main() {
-    ARUI::Debug::AllowConfiguredDebuggerAttach();
+  ARUI::Debug::AllowConfiguredDebuggerAttach();
   auto renderDevice = std::make_shared<ARUI::Render::OpenGLRenderDevice>();
   auto graphics =
       std::make_shared<ARUI::Render::OpenGLOpenXRBinding>(renderDevice);

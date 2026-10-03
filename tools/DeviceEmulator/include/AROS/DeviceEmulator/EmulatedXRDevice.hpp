@@ -72,8 +72,9 @@ private:
         std::uint32_t height,
         std::span<const std::uint8_t> rgbaPixels);
 
-    EyeImage leftEye_;
-    EyeImage rightEye_;
+    EyeImage bootImage_;
+    EyeImage openXRLeftEye_;
+    EyeImage openXRRightEye_;
     DeviceMode mode_ {DeviceMode::BootDisplay};
     bool connected_ {false};
     bool openXRSessionActive_ {false};

@@ -20,7 +20,16 @@ add_subdirectory(src)
 add_subdirectory(tools)
 
 add_custom_target(
-    build-vm
+    build-base
+    COMMAND "${CMAKE_COMMAND}" -E env "AROS_ARUI_DESKTOP=$<TARGET_FILE:AruiDesktop>" "AROS_ARUI_LOGIN=$<TARGET_FILE:AruiLogin>" "AROS_ARUI_BOOT=$<TARGET_FILE:AruiBoot>" "${CMAKE_SOURCE_DIR}/scripts/build-base.sh"
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    COMMENT "Building the hardware-independent AR-OS Base"
+    USES_TERMINAL
+    VERBATIM
+)
+
+add_custom_target(
+    build-sandbox
     COMMAND "${CMAKE_COMMAND}" -E env "AROS_ARUI_DESKTOP=$<TARGET_FILE:AruiDesktop>" "AROS_ARUI_LOGIN=$<TARGET_FILE:AruiLogin>" "AROS_ARUI_BOOT=$<TARGET_FILE:AruiBoot>" "${CMAKE_SOURCE_DIR}/scripts/build-vm.sh"
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     COMMENT "Building the AR-OS NixOS VM"
@@ -29,16 +38,17 @@ add_custom_target(
 )
 
 add_custom_target(
-    run-vm
-    COMMAND "${CMAKE_SOURCE_DIR}/scripts/run-vm.sh"
+    run-sandbox
+    COMMAND "${CMAKE_SOURCE_DIR}/scripts/run-sandbox.sh"
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-    COMMENT "Running the AR-OS VM with QEMU/KVM"
+    COMMENT "Running the AR-OS Sandbox with QEMU/KVM"
     USES_TERMINAL
     VERBATIM
 )
 
-add_dependencies(build-vm AruiBoot AruiLogin AruiDesktop)
-add_dependencies(run-vm build-vm)
+add_dependencies(build-base AruiBoot AruiLogin AruiDesktop)
+add_dependencies(build-sandbox AruiBoot AruiLogin AruiDesktop)
+add_dependencies(run-sandbox build-sandbox)
 
 if(AROS_BUILD_XR_DISPLAY_BRIDGE)
 add_custom_target(
@@ -51,26 +61,6 @@ add_custom_target(
 )
 add_dependencies(run-xr-display AROSXRDisplayBridge)
 endif()
-
-add_custom_target(
-    build-vm-debug
-    COMMAND "${CMAKE_COMMAND}" -E env "AROS_ARUI_DESKTOP=$<TARGET_FILE:AruiDesktop>" "AROS_ARUI_LOGIN=$<TARGET_FILE:AruiLogin>" "AROS_ARUI_BOOT=$<TARGET_FILE:AruiBoot>" "${CMAKE_SOURCE_DIR}/scripts/build-vm.sh" --debug
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-    COMMENT "Building the AR-OS NixOS VM in debug mode"
-    USES_TERMINAL
-    VERBATIM
-)
-
-add_custom_target(
-    run-vm-debug
-    COMMAND "${CMAKE_SOURCE_DIR}/scripts/run-vm.sh" --debug
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-    COMMENT "Running the AR-OS VM with debug display and tmux console"
-    USES_TERMINAL
-    VERBATIM
-)
-add_dependencies(build-vm-debug AruiBoot AruiLogin AruiDesktop)
-add_dependencies(run-vm-debug build-vm-debug)
 
 # Keep the complete target graph readable in CMake-aware IDEs and CMake Tools.
 # Assign after all subdirectories so targets created indirectly (tests, shaders,

@@ -13,8 +13,11 @@ Linux / NixOS
 Spatial Applications
 ```
 
-Nix constructs the operating system and QEMU VM. The root CMake project builds
-native AR-OS tools and the ARUI subproject. Its AruiDesktop, AruiLogin, and AruiBoot artifacts is patched
+Nix constructs the operating system in two layers. **Base** is
+hardware-independent AR-OS; **Sandbox** imports Base and adds QEMU, developer
+access, host display integration, and streaming tools. The root CMake project
+builds native AR-OS tools and the ARUI subproject. Its AruiDesktop, AruiLogin,
+and AruiBoot artifacts are patched
 and bundled into the NixOS closure during every VM build.
 
 ## Device backends
@@ -79,42 +82,69 @@ Use `-DAROS_BUILD_DEVICE_EMULATOR=OFF` for a production-oriented native build.
 The emulator links GLFW and Dear ImGui and consumes the shared RFB virtual-display
 transport.
 
-## Build and run the VM
+## Base and Sandbox
+
+```text
+AR-OS Base
+├── Linux/NixOS, networking and graphics
+├── ARUI boot, login and desktop services
+└── Monado/OpenXR
+        │
+        └── Sandbox
+            ├── QEMU/virtio/virgl
+            ├── SSH, gdb and tmux
+            ├── GStreamer
+            └── loopback RFB → Device Emulator / XR Display Bridge
+```
+
+Base has no dependency on QEMU, Device Emulator, XRDisplayBridge, or remote
+display infrastructure. It is the parent for future Deck X and other hardware
+configurations. Sandbox owns all current development-VM behavior. GStreamer and
+its base/good/bad plugin sets are installed only in Sandbox; the streaming
+layer is separate from ARUI. The initial raw stream remains QEMU's shared RFB
+endpoint so the two existing host consumers keep working while a future
+GStreamer producer can be connected to framebuffer or Monado frames.
+
+Build either output directly (the helper scripts supply the ARUI executables):
 
 ```bash
-nix build .#vm
-QEMU_OPTS=-enable-kvm ./result/bin/run-ar-os-vm
+nix build 'path:.#base'
+nix build 'path:.#sandbox'
+QEMU_OPTS=-enable-kvm ./result-sandbox/bin/run-ar-os-vm
 ```
 
 The root CMake project exposes convenience targets for the normal development
-workflow. `run-vm` depends on `build-vm`, checks `/dev/kvm`, and explicitly
+workflow. `run-vm` depends on `build-sandbox`, checks `/dev/kvm`, and explicitly
 enables KVM acceleration:
 
 ```bash
-cmake --build build --target build-vm
+cmake --build build --target build-base
+cmake --build build --target build-sandbox
 cmake --build build --target run-vm
 ```
 
 The equivalent scripts are:
 
 ```bash
+./scripts/build-base.sh
 ./scripts/build-vm.sh
 ./scripts/run-device-emulator.sh
-./scripts/run-vm.sh
+./scripts/run-sandbox.sh
 ```
 
 All writable VM state is kept under `.vm/`:
 
 ```text
 .vm/
-├── ar-os.qcow2   # persistent VM root filesystem
+├── ar-os-sandbox.qcow2 # persistent Sandbox root filesystem
 ├── serial.log     # secondary serial-console diagnostics
 ├── shared/       # persistent host/guest exchange directory
-└── run.*/        # per-run sockets and temporary files; removed on exit
 ```
 
 The immutable kernel, initrd, and NixOS closure remain in `/nix/store`; they are
 build outputs rather than VM runtime state.
+Per-run sockets are created under the host temporary directory and removed when
+the Sandbox exits, keeping special files out of the path-flake source tree.
 
 The graphical `tty0` console is the primary boot console and is carried to the
 Device Emulator through QEMU's loopback RFB display. The secondary `ttyS0`
@@ -125,12 +155,12 @@ The Device Emulator is the visible host-side fake XR device. QEMU publishes its
 headless virtual display through loopback RFB; both the emulator and XR bridge
 consume it through the shared transport. See `tools/DeviceEmulator/README.md`.
 
-The VM is intentionally a small diagnostics image, not a development
-environment. It contains AruiBoot, AruiLogin, and AruiDesktop, but no Device Emulator, compiler, source-control
+The Sandbox VM is a small diagnostics environment. It contains AruiBoot,
+AruiLogin, AruiDesktop, GStreamer, and debugging tools, but no Device Emulator, compiler, source-control
 client, Nix CLI, desktop environment, compositor, or Xwayland. It boots
 Linux/systemd, initializes Mesa, and provides SSH plus the requested graphics
 inspection commands. It does not run any graphics-report service automatically.
-The debug profile exposes a headless, virgl-accelerated `virtio-vga-gl` display
+The Sandbox exposes a headless, virgl-accelerated `virtio-vga-gl` display
 and publishes its framebuffer through a loopback-only VNC/RFB endpoint. QEMU
 uses the host AMD iGPU render node, leaving the NVIDIA GPU untouched. The
 host-side Device Emulator consumes that framebuffer and mirrors boot output
@@ -160,12 +190,11 @@ AR-OS provides it as a thin alias for Khronos' `openxr_runtime_list`.
 
 ## Current limitations
 
-The VM does not yet provide the final XR device protocol or complete in-guest
-OpenXR handoff. The debug VM now provides hardware-backed virtio GPU rendering;
-the remaining device/runtime integration is an explicit future integration
-point. They will be added only when the device OS
-needs them; the current VM exists solely to prove boot and report graphics
-capabilities.
+The Sandbox now provides a working in-guest Monado OpenXR session and streams
+independent raw RGBA eye frames to the Device Emulator after the RFB boot-display
+phase. Monado currently supplies a simulated head pose. Emulator-to-guest
+tracking, hands, controllers, and a production encoded transport remain future
+integration points.
 
 ## XR Display Bridge
 
@@ -173,24 +202,19 @@ To view the boot console on a Quest 2 through WiVRn, start WiVRn and connect the
 headset, then build AROSXRDisplayBridge and run:
 
     ./scripts/run-xr-display.sh
-    ./scripts/run-vm.sh
+    ./scripts/run-sandbox.sh
 
 The bridge and Device Emulator are independent consumers of the shared
-AROSVirtualDisplay RFB transport and may run concurrently. The debug VM sees its virgl-accelerated `virtio-vga-gl` display. See tools/XRDisplayBridge/README.md for
+AROSVirtualDisplay RFB transport and may run concurrently. The Sandbox sees its virgl-accelerated `virtio-vga-gl` display. See tools/XRDisplayBridge/README.md for
 setup, architecture, lifecycle, diagnostics, and the future OpenXR proxy
 boundary.
 
-## Normal and debug VM profiles
+## Sandbox display and debugging
 
-The VM defaults to a normal OS-style boot:
-
-    ./scripts/build-vm.sh
-    ./scripts/run-vm.sh
-
-Debug mode enables a virgl-accelerated `virtio-vga-gl` device backed by the
+The Sandbox enables a virgl-accelerated `virtio-vga-gl` device backed by the
 host AMD render node at PCI `06:00.0`. QEMU renders through EGL-headless while
 continuing to export the scanout over loopback RFB for the Device Emulator and
-XR Display Bridge. The debug launcher supplies the host Mesa GBM/DRI paths to
+XR Display Bridge. The Sandbox launcher supplies the host Mesa GBM/DRI paths to
 the Nix-built QEMU process; the guest uses its `virtio_gpu` Mesa driver rather
 than forcing llvmpipe. It also automatically logs the
 aros user, and enables the Nix CLI/daemon with nix-command and flakes.
@@ -198,15 +222,13 @@ aros user into tty1 and runs:
 
     tmux new-session -A -s aros
 
-Build and run that profile explicitly:
+Build and run it with:
 
-    ./scripts/build-vm.sh --debug
-    ./scripts/run-vm.sh --debug
+    ./scripts/build-vm.sh
+    ./scripts/run-sandbox.sh
 
-The equivalent CMake targets are build-vm/run-vm and
-build-vm-debug/run-vm-debug. Normal and debug modes use separate persistent
-disks under .vm so switching profiles does not mix mutable guest state. SSH is
-available in both modes.
+The equivalent CMake targets are `build-sandbox` and `run-vm`. SSH and the
+loopback-only gdbservers are Sandbox features and are absent from Base.
 
 ## Early ARUI lifecycle
 
@@ -242,7 +264,7 @@ Inspect the lifecycle with:
 
 ## Remote debugging ARUI systems
 
-Debug VM images start persistent extended-remote gdbservers without delaying any
+Sandbox VM images start persistent extended-remote gdbservers without delaying any
 ARUI process. QEMU forwards them only onto host loopback:
 
 | System | Host endpoint | Guest executable |
@@ -276,5 +298,5 @@ Retrieve the desktop PID with:
 Boot and login are intentionally transient, so attempting to attach to their
 systemd PIDs races their normal exit. Their launch configurations instead use
 GDB's extended-remote `run` support. Neither service waits for the debugger
-during ordinary startup. Normal VM images contain no gdbservers and expose none
-of these ports.
+during ordinary startup. Base contains no gdbservers and exposes none of these
+ports.

@@ -40,7 +40,7 @@ The OpenXR loader is supplied by the root vcpkg manifest:
 Install and start WiVRn on the host, make WiVRn the active OpenXR runtime, and connect the Quest 2. Runtime setup belongs to WiVRn; the bridge contains no WiVRn-specific API calls. Then use separate terminals in this order:
 
     ./scripts/run-xr-display.sh
-    ./scripts/run-vm.sh
+    ./scripts/run-sandbox.sh
     # Optional, concurrently:
     ./scripts/run-device-emulator.sh
 
@@ -52,7 +52,7 @@ The bridge may start before the VM and waits for RFB at 127.0.0.1:5901. It recon
 - “No headset is connected” means the runtime is active but no HMD system is available. Start the WiVRn server and connect its Quest 2 client, then retry.
 - An XR_KHR_opengl_enable error means the selected runtime cannot accept the bridge's OpenGL binding.
 - A GLFW/X11 context error means the bridge was not run from a host graphical X11 session. Its window is hidden; QEMU itself still has no GTK/SDL display.
-- “Waiting for AR-OS framebuffer” means the VM is not publishing RFB yet. Start scripts/run-vm.sh and confirm its VNC port remains 5901.
+- “Waiting for AR-OS framebuffer” means the VM is not publishing RFB yet. Start scripts/run-sandbox.sh and confirm its VNC port remains 5901.
 - The bridge ends an OpenXR session cleanly on STOPPING and begins it again if the runtime returns to READY. Runtime loss exits with a useful diagnostic so the process can be restarted.
 - Serial fallback remains in .vm/serial.log; SSH remains ssh -p 2222 aros@127.0.0.1.
 

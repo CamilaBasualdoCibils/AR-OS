@@ -8,6 +8,7 @@ add_executable(
     src/EmulatedXRDevice.cpp
     src/EmulatorApplication.cpp
     src/RfbTransport.cpp
+    src/SandboxTransport.cpp
 )
 
 target_compile_features(AROSDeviceEmulator PRIVATE cxx_std_23)

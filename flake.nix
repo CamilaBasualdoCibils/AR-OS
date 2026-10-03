@@ -41,17 +41,18 @@
       aruiDesktop = bundledExecutable {
         envName = "AROS_ARUI_DESKTOP"; executable = "AruiDesktop"; pname = "arui-desktop";
       };
-      makeVm = arosDebug: nixpkgs.lib.nixosSystem {
+      makeSystem = module: nixpkgs.lib.nixosSystem {
         inherit system;
-        specialArgs = { inherit arosDebug aruiBoot aruiLogin aruiDesktop; };
-        modules = [ ./nix/systems/vm.nix ];
+        specialArgs = { inherit aruiBoot aruiLogin aruiDesktop; };
+        modules = [ module ];
       };
-      normalVm = makeVm false;
-      debugVm = makeVm true;
+      baseSystem = makeSystem ./nix/systems/base.nix;
+      sandboxSystem = makeSystem ./nix/systems/sandbox.nix;
     in {
       packages.${system} = {
-        vm = normalVm.config.system.build.vm;
-        vm-debug = debugVm.config.system.build.vm;
+        base = baseSystem.config.system.build.toplevel;
+        sandbox = sandboxSystem.config.system.build.vm;
       };
+      nixosConfigurations = { base = baseSystem; sandbox = sandboxSystem; };
     };
 }

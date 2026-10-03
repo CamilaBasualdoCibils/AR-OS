@@ -19,7 +19,7 @@ for artifact in "$AROS_ARUI_BOOT" "$AROS_ARUI_LOGIN" "$AROS_ARUI_DESKTOP"; do
 done
 export AROS_ARUI_BOOT AROS_ARUI_LOGIN AROS_ARUI_DESKTOP
 
-echo "Building the AR-OS Sandbox VM with boot, login, and desktop systems..."
+echo "Building the hardware-independent AR-OS Base closure..."
 flake_ref="path:$(pwd -P)"
 exec nix --extra-experimental-features "nix-command flakes" \
-    build --impure "$flake_ref#sandbox" -o result-sandbox "$@"
+    build --impure "$flake_ref#base" -o result-base "$@"
