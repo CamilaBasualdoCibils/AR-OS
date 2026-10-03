@@ -89,6 +89,7 @@ private:
     if (!HasExtension(XR_KHR_OPENGL_ENABLE_EXTENSION_NAME))
       throw std::runtime_error(
           "active OpenXR runtime does not support XR_KHR_opengl_enable");
+          glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
     if (!glfwInit())
       throw std::runtime_error("GLFW could not connect to the host display; an "
                                "X11 OpenGL session is required");

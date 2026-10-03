@@ -2,14 +2,51 @@
   "name": "ar-os",
   "version-string": "0.1.0",
   "dependencies": [
-    "glfw3",
-    "openxr-loader",
+    "boost-container",
+    "boost-describe",
+    "boost-geometry",
+    "boost-graph",
+    "boost-lockfree",
+    "boost-multi-index",
+    "boost-program-options",
+    "boost-stacktrace",
+    "boost-static-string",
+    "boost-type-traits",
+    "boost-uuid",
+    "freetype",
+    "glew",
+    "glm",
+    {
+      "name": "glfw3",
+      "features": [ "wayland" ]
+    },
     {
       "name": "imgui",
       "features": [
+        "docking-experimental",
+        "freetype-svg",
         "glfw-binding",
-        "opengl3-binding"
+        "opengl3-binding",
+        "vulkan-binding"
       ]
-    }
+    },
+    "implot",
+    {
+      "name": "mimalloc",
+      "features": [ "override" ]
+    },
+    "nlohmann-json",
+    {
+      "name": "openxr-loader",
+      "features": [ "vulkan" ]
+    },
+    "pugixml",
+    {
+      "name": "spdlog",
+      "features": [ "fmt" ]
+    },
+    "tracy",
+    "vulkan",
+    "vulkan-memory-allocator"
   ]
 }

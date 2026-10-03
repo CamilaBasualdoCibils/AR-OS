@@ -251,19 +251,8 @@ ARUI process. QEMU forwards them only onto host loopback:
 | ARUI login | `127.0.0.1:2346` | `AruiLogin` |
 | ARUI desktop | `127.0.0.1:2347` | `AruiDesktop` |
 
-The checked-in VS Code launch configurations connect with the matching
-unstripped host executable. For the transient boot and login stages, the
-extended-remote server starts a fresh guest process under GDB; no PID lookup is
-needed. The desktop configuration attaches to the long-running service PID.
-
-The equivalent manual boot sequence is:
-
-    gdb build/src/Boot/AruiBoot
-    (gdb) target extended-remote 127.0.0.1:2345
-    (gdb) set remote exec-file /run/current-system/sw/bin/AruiBoot
-    (gdb) run
-
-To attach to the desktop instead:
+Connect using the matching unstripped host executable, then attach to the live
+service PID:
 
     gdb build/AR-UI/Server/Desktop/AruiDesktop
     (gdb) target extended-remote 127.0.0.1:2347
@@ -273,8 +262,7 @@ Retrieve the desktop PID with:
 
     ssh -p 2222 aros@127.0.0.1       systemctl show --property MainPID --value arui-desktop.service
 
-Boot and login are intentionally transient, so attempting to attach to their
-systemd PIDs races their normal exit. Their launch configurations instead use
-GDB's extended-remote `run` support. Neither service waits for the debugger
-during ordinary startup. Normal VM images contain no gdbservers and expose none
-of these ports.
+Boot and login are intentionally transient. To debug either placeholder,
+connect its extended-remote endpoint first and restart its service from a second
+terminal; neither service waits for the debugger during ordinary startup.
+Normal VM images contain no gdbservers and expose none of these ports.

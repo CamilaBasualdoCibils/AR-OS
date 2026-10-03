@@ -1,0 +1,103 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Attach: ARUI Boot (VM :2345)",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/src/Boot/AruiBoot",
+      "cwd": "${workspaceFolder}",
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
+      "customLaunchSetupCommands": [
+        {
+          "description": "Connect to the ARUI Boot extended-remote server",
+          "text": "-target-select extended-remote 127.0.0.1:2345",
+          "ignoreFailures": false
+        },
+        {
+          "description": "Select the guest AruiBoot executable",
+          "text": "-interpreter-exec console \"set remote exec-file /run/current-system/sw/bin/AruiBoot\"",
+          "ignoreFailures": false
+        }
+      ],
+      "launchCompleteCommand": "exec-run",
+      "setupCommands": [
+        {
+          "description": "Enable GDB pretty printing",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ],
+      "targetArchitecture": "x64"
+    },
+    {
+      "name": "Attach: ARUI Login (VM :2346)",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/AR-UI/Server/Login/AruiLogin",
+      "cwd": "${workspaceFolder}",
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
+      "customLaunchSetupCommands": [
+        {
+          "description": "Connect to the ARUI Login extended-remote server",
+          "text": "-target-select extended-remote 127.0.0.1:2346",
+          "ignoreFailures": false
+        },
+        {
+          "description": "Select the guest AruiLogin executable",
+          "text": "-interpreter-exec console \"set remote exec-file /run/current-system/sw/bin/AruiLogin\"",
+          "ignoreFailures": false
+        }
+      ],
+      "launchCompleteCommand": "exec-run",
+      "setupCommands": [
+        {
+          "description": "Enable GDB pretty printing",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ],
+      "targetArchitecture": "x64"
+    },
+    {
+      "name": "Attach: ARUI Desktop (VM :2347)",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/AR-UI/Server/Desktop/AruiDesktop",
+      "cwd": "${workspaceFolder}",
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
+      "customLaunchSetupCommands": [
+        {
+          "description": "Connect to the ARUI Desktop extended-remote server",
+          "text": "-target-select extended-remote 127.0.0.1:2347",
+          "ignoreFailures": false
+        },
+        {
+          "description": "Attach to the running AruiDesktop service process",
+          "text": "-target-attach ${input:aruiDesktopPid}",
+          "ignoreFailures": false
+        }
+      ],
+      "launchCompleteCommand": "None",
+      "setupCommands": [
+        {
+          "description": "Enable GDB pretty printing",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ],
+      "targetArchitecture": "x64"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "aruiDesktopPid",
+      "type": "promptString",
+      "description": "AruiDesktop PID: ssh -p 2222 aros@127.0.0.1 systemctl show -p MainPID --value arui-desktop",
+      "default": "0"
+    }
+  ]
+}

@@ -209,6 +209,13 @@ void EmulatorApplication::DrawEyePanel(
             imagePosition.x + (imageSize.x - textSize.x) * 0.5F,
             imagePosition.y + (imageSize.y - textSize.y) * 0.5F,
         };
+        //black square behind the text
+        const int padding = 4;
+        ImGui::GetWindowDrawList()->AddRectFilled(
+            {textPosition.x - padding, textPosition.y - padding},
+            {textPosition.x + textSize.x + padding, textPosition.y + textSize.y + padding},
+            IM_COL32(0, 0, 0, 255)
+        );
         ImGui::GetWindowDrawList()->AddText(textPosition, IM_COL32(220, 220, 225, 255), message);
     }
     ImGui::EndChild();

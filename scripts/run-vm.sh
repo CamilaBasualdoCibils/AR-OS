@@ -42,6 +42,20 @@ export SHARED_DIR="$vm_state_dir/shared"
 export TMPDIR="$runtime_dir"
 export USE_TMPDIR=1
 
+if [[ "$mode" == "debug" ]]; then
+    amd_render_node="/dev/dri/by-path/pci-0000:06:00.0-render"
+    if [[ ! -e "$amd_render_node" ]]; then
+        echo "AMD render node not found at $amd_render_node" >&2
+        exit 1
+    fi
+    # The VM runner comes from Nix, while this host's amdgpu Mesa stack is in
+    # /usr. Make its GBM backend, DRI driver, and Gallium dependencies visible
+    # to QEMU's EGL-headless virgl renderer.
+    export GBM_BACKENDS_PATH="/usr/lib/gbm"
+    export LIBGL_DRIVERS_PATH="/usr/lib/dri"
+    export LD_LIBRARY_PATH="/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+fi
+
 echo "Starting AR-OS VM in $mode mode..."
 setsid "$runner" "$@" &
 runner_pid=$!
