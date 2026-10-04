@@ -1,4 +1,4 @@
-#include "ARUI/Core/Debug/AllowDebugger.hpp"
+#include "VISR/Core/Debug/AllowDebugger.hpp"
 #include "Manager.hpp"
 #include "SystemExperience.hpp"
 
@@ -14,19 +14,19 @@ void Stop(int) { running = 0; }
 } // namespace
 
 int main() {
-  ARUI::Debug::AllowConfiguredDebuggerAttach();
+  VISR::Debug::AllowConfiguredDebuggerAttach();
   try {
     std::signal(SIGINT, Stop);
     std::signal(SIGTERM, Stop);
-    auto presentation = AROS::ConnectPresentationController();
-    AROS::ShowSystemExperience(*presentation, "AR-OS Desktop");
-    AROS::Desktop::Manager manager;
+    auto presentation = VISROS::ConnectPresentationController();
+    VISROS::ShowSystemExperience(*presentation, "VISR OS Desktop");
+    VISROS::Desktop::Manager manager;
     manager.Start();
     while (running)
       std::this_thread::sleep_for(std::chrono::seconds{1});
     return 0;
   } catch (const std::exception &error) {
-    std::cerr << "arui-desktop: " << error.what() << '\n';
+    std::cerr << "visr-desktop: " << error.what() << '\n';
     return 1;
   }
 }

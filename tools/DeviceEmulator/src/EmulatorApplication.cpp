@@ -11,7 +11,7 @@
 #include <stdexcept>
 #include <utility>
 
-namespace AROS::DeviceEmulator {
+namespace VISROS::DeviceEmulator {
 namespace {
 
 constexpr const char* kGlslVersion = "#version 330";
@@ -104,7 +104,7 @@ void EmulatorApplication::Initialize()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    window_ = glfwCreateWindow(1280, 800, "AR-OS Device Emulator", nullptr, nullptr);
+    window_ = glfwCreateWindow(1280, 800, "VISR OS Device Emulator", nullptr, nullptr);
     if (!window_) {
         glfwTerminate();
         throw std::runtime_error("failed to create the Device Emulator window");
@@ -181,8 +181,8 @@ void EmulatorApplication::DrawInterface()
 
     constexpr ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration
         | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
-    ImGui::Begin("AR-OS Device Emulator", nullptr, flags);
-    ImGui::TextUnformatted("AR-OS Device Emulator");
+    ImGui::Begin("VISR OS Device Emulator", nullptr, flags);
+    ImGui::TextUnformatted("VISR OS Device Emulator");
     ImGui::Separator();
 
     const ImVec2 available = ImGui::GetContentRegionAvail();
@@ -275,7 +275,7 @@ void EmulatorApplication::DrawStatus()
     if (device_.Connected()) {
         ImGui::TextColored({0.35F, 1.0F, 0.45F, 1.0F}, "HEY, I'm a screen! Display to me!");
     } else {
-        ImGui::TextDisabled("Waiting for the AR-OS VM display on 127.0.0.1:5901...");
+        ImGui::TextDisabled("Waiting for the VISR OS VM display on 127.0.0.1:5901...");
     }
 }
 
@@ -283,4 +283,4 @@ void DisconnectedTransport::Poll(EmulatedXRDevice&) { }
 bool DisconnectedTransport::Connected() const noexcept { return false; }
 std::string_view DisconnectedTransport::Name() const noexcept { return "None"; }
 
-} // namespace AROS::DeviceEmulator
+} // namespace VISROS::DeviceEmulator

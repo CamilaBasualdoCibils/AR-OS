@@ -5,7 +5,7 @@
 #include <string>
 #include <thread>
 #include <vector>
-namespace AROS::VirtualDisplay {
+namespace VISROS::VirtualDisplay {
 struct Frame { std::vector<std::uint8_t> rgba; std::uint32_t width{}; std::uint32_t height{}; std::uint64_t generation{}; };
 class RfbClient final {
 public:

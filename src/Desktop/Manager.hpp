@@ -1,8 +1,8 @@
 #pragma once
 
-namespace AROS::Desktop {
+namespace VISROS::Desktop {
 class Manager {
 public:
   void Start() {}
 };
-} // namespace AROS::Desktop
+} // namespace VISROS::Desktop

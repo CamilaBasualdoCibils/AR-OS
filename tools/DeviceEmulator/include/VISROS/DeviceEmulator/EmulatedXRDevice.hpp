@@ -6,7 +6,7 @@
 #include <span>
 #include <vector>
 
-namespace AROS::DeviceEmulator {
+namespace VISROS::DeviceEmulator {
 
 enum class DeviceMode {
     BootDisplay,
@@ -83,4 +83,4 @@ private:
     std::uint64_t nextGeneration_ {1};
 };
 
-} // namespace AROS::DeviceEmulator
+} // namespace VISROS::DeviceEmulator

@@ -1,5 +1,5 @@
 {
-  description = "AR-OS standalone NixOS image and native software";
+  description = "VISR OS standalone NixOS image and native software";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
   outputs = { self, nixpkgs }:
@@ -15,7 +15,7 @@
         let hostPath = builtins.getEnv envName;
         in if hostPath == "" then
           pkgs.writeShellScriptBin executable ''
-            echo "${executable} was not bundled; build AR-OS through scripts/build-vm.sh" >&2
+            echo "${executable} was not bundled; build VISR OS through scripts/build-vm.sh" >&2
             exit 127
           ''
         else pkgs.stdenv.mkDerivation {
@@ -32,21 +32,21 @@
             install -Dm755 "$src" "$out/bin/${executable}"
           '';
         };
-      aruiServer = bundledExecutable {
-        envName = "AROS_ARUI_SERVER"; executable = "AruiServer"; pname = "arui-server";
+      visrServer = bundledExecutable {
+        envName = "VISROS_VISR_SERVER"; executable = "VisrServer"; pname = "visr-server";
       };
-      aruiBoot = bundledExecutable {
-        envName = "AROS_ARUI_BOOT"; executable = "AruiBoot"; pname = "arui-boot";
+      visrBoot = bundledExecutable {
+        envName = "VISROS_VISR_BOOT"; executable = "VisrBoot"; pname = "visr-boot";
       };
-      aruiLogin = bundledExecutable {
-        envName = "AROS_ARUI_LOGIN"; executable = "AruiLogin"; pname = "arui-login";
+      visrLogin = bundledExecutable {
+        envName = "VISROS_VISR_LOGIN"; executable = "VisrLogin"; pname = "visr-login";
       };
-      aruiDesktop = bundledExecutable {
-        envName = "AROS_ARUI_DESKTOP"; executable = "AruiDesktop"; pname = "arui-desktop";
+      visrDesktop = bundledExecutable {
+        envName = "VISROS_VISR_DESKTOP"; executable = "VisrDesktop"; pname = "visr-desktop";
       };
       makeSystem = module: nixpkgs.lib.nixosSystem {
         inherit system;
-        specialArgs = { inherit aruiServer aruiBoot aruiLogin aruiDesktop; };
+        specialArgs = { inherit visrServer visrBoot visrLogin visrDesktop; };
         modules = [ module ];
       };
       baseSystem = makeSystem ./nix/systems/base.nix;

@@ -1,8 +1,8 @@
-{ aruiBoot, aruiDesktop, aruiLogin, aruiServer, lib, pkgs, ... }:
+{ visrBoot, visrDesktop, visrLogin, visrServer, lib, pkgs, ... }:
 let
-  aruiServerReadyFile = "/run/arui-server/xr-first-frame";
-  waitForAruiServerReady = pkgs.writeShellScript "wait-for-arui-server-ready" ''
-    while [ ! -e ${aruiServerReadyFile} ]; do
+  visrServerReadyFile = "/run/visr-server/xr-first-frame";
+  waitForVisrServerReady = pkgs.writeShellScript "wait-for-visr-server-ready" ''
+    while [ ! -e ${visrServerReadyFile} ]; do
       sleep 0.1
     done
   '';
@@ -11,17 +11,17 @@ let
     LIBGL_DRIVERS_PATH = "/run/opengl-driver/lib/dri";
     __EGL_VENDOR_LIBRARY_DIRS = "/run/opengl-driver/share/glvnd/egl_vendor.d";
     XR_RUNTIME_JSON = "${pkgs.monado}/share/openxr/1/openxr_monado.json";
-    XDG_RUNTIME_DIR = "/run/arui-monado";
+    XDG_RUNTIME_DIR = "/run/visr-monado";
     XDG_CONFIG_HOME = "/etc/xdg";
     EGL_PLATFORM = "surfaceless";
 
-    # Monado uses Vulkan while ARUI currently uses OpenGL. Force both APIs
+    # Monado uses Vulkan while VISR currently uses OpenGL. Force both APIs
     # onto Mesa's software device until the Sandbox exposes one virtual GPU
     # with compatible Vulkan/OpenGL external-memory support.
     LIBGL_ALWAYS_SOFTWARE = "1";
     XRT_COMPOSITOR_NULL = "1";
 
-    ARUI_FONT_PATH = "${pkgs.noto-fonts}/share/fonts/noto/NotoSans.ttf";
+    VISR_FONT_PATH = "${pkgs.noto-fonts}/share/fonts/noto/NotoSans.ttf";
   };
 
   experienceServiceConfig = {
@@ -43,8 +43,8 @@ in {
 
   boot.loader.grub.devices = lib.mkDefault [ "nodev" ];
 
-  networking.hostName = "ar-os";
-  # Keep ARUI's early, local RPC endpoint resolvable before network services.
+  networking.hostName = "visr-os";
+  # Keep VISR's early, local RPC endpoint resolvable before network services.
   networking.hosts."127.0.0.1" = [ "localhost" ];
   networking.useDHCP = true;
 
@@ -64,21 +64,21 @@ in {
   };
 
   systemd.tmpfiles.rules = [
-    "d /run/arui-monado 0750 aros users -"
-    "d /run/arui-server 0750 aros users -"
+    "d /run/visr-monado 0750 aros users -"
+    "d /run/visr-server 0750 aros users -"
   ];
 
   #
-  # Early ARUI startup target.
+  # Early VISR startup target.
   #
   # The normal boot process is not allowed to reach multi-user.target until
-  # the initial ARUI boot experience has completed.
+  # the initial VISR boot experience has completed.
   #
-  systemd.targets.arui-early = {
-    description = "Early ARUI startup";
+  systemd.targets.visr-early = {
+    description = "Early VISR startup";
     wantedBy = [ "sysinit.target" ];
 
-    # Start ARUI as soon as the basic system initialization is available.
+    # Start VISR as soon as the basic system initialization is available.
     after = [
       "local-fs.target"
       "systemd-tmpfiles-setup.service"
@@ -88,8 +88,8 @@ in {
     before = [ "multi-user.target" ];
 
     requires = [
-      "arui-server.service"
-      "arui-boot.service"
+      "visr-server.service"
+      "visr-boot.service"
     ];
   };
 
@@ -98,11 +98,11 @@ in {
   #
 
   systemd.sockets.monado-runtime = {
-    description = "Monado OpenXR runtime socket for ARUI";
+    description = "Monado OpenXR runtime socket for VISR";
     wantedBy = [ "sockets.target" ];
 
     socketConfig = {
-      ListenStream = "/run/arui-monado/monado_comp_ipc";
+      ListenStream = "/run/visr-monado/monado_comp_ipc";
       SocketUser = "aros";
       SocketGroup = "users";
       RemoveOnStop = true;
@@ -111,7 +111,7 @@ in {
   };
 
   systemd.services.monado-runtime = {
-    description = "Monado OpenXR runtime for ARUI";
+    description = "Monado OpenXR runtime for VISR";
 
     requires = [ "monado-runtime.socket" ];
 
@@ -132,28 +132,28 @@ in {
   };
 
   environment.systemPackages = [
-    aruiServer
-    aruiBoot
-    aruiLogin
-    aruiDesktop
+    visrServer
+    visrBoot
+    visrLogin
+    visrDesktop
   ];
 
   #
-  # 1. ARUI SERVER
+  # 1. VISR SERVER
   #
   # Start this first, as early as possible.
   #
 
-  systemd.services.arui-server = {
-    description = "ARUI runtime and presentation service";
+  systemd.services.visr-server = {
+    description = "VISR runtime and presentation service";
 
     unitConfig.DefaultDependencies = false;
 
-    wantedBy = [ "arui-early.target" ];
+    wantedBy = [ "visr-early.target" ];
 
     before = [
-      "arui-boot.service"
-      "arui-early.target"
+      "visr-boot.service"
+      "visr-early.target"
       "multi-user.target"
     ];
 
@@ -169,7 +169,7 @@ in {
     ];
 
     environment = graphicsEnvironment // {
-      ARUI_SERVER_READY_FILE = aruiServerReadyFile;
+      VISR_SERVER_READY_FILE = visrServerReadyFile;
     };
 
     serviceConfig = {
@@ -177,9 +177,9 @@ in {
       User = "aros";
       SupplementaryGroups = [ "video" "render" ];
 
-      ExecStartPre = "${pkgs.coreutils}/bin/rm -f ${aruiServerReadyFile}";
-      ExecStart = "${aruiServer}/bin/AruiServer";
-      ExecStartPost = waitForAruiServerReady;
+      ExecStartPre = "${pkgs.coreutils}/bin/rm -f ${visrServerReadyFile}";
+      ExecStart = "${visrServer}/bin/VisrServer";
+      ExecStartPost = waitForVisrServerReady;
       TimeoutStartSec = "infinity";
 
       Restart = "on-failure";
@@ -190,28 +190,28 @@ in {
   };
 
   #
-  # 2. ARUI BOOT
+  # 2. VISR BOOT
   #
-  # Cannot start until arui-server has started.
-  # Because this is Type=oneshot, arui-early.target will not be considered
-  # reached until AruiBoot exits successfully.
+  # Cannot start until visr-server has started.
+  # Because this is Type=oneshot, visr-early.target will not be considered
+  # reached until VisrBoot exits successfully.
   #
 
-  systemd.services.arui-boot = {
-    description = "ARUI boot system";
+  systemd.services.visr-boot = {
+    description = "VISR boot system";
 
     unitConfig.DefaultDependencies = false;
 
-    wantedBy = [ "arui-early.target" ];
+    wantedBy = [ "visr-early.target" ];
 
-    requires = [ "arui-server.service" ];
+    requires = [ "visr-server.service" ];
 
-    after = [ "arui-server.service" ];
+    after = [ "visr-server.service" ];
 
     before = [
-      "arui-early.target"
+      "visr-early.target"
       "multi-user.target"
-      "arui-login.service"
+      "visr-login.service"
     ];
 
     environment = graphicsEnvironment;
@@ -219,7 +219,7 @@ in {
     serviceConfig =
       experienceServiceConfig
       // {
-        ExecStart = "${aruiBoot}/bin/AruiBoot";
+        ExecStart = "${visrBoot}/bin/VisrBoot";
       };
   };
 
@@ -227,32 +227,32 @@ in {
   # 3. LOGIN
   #
 
-  systemd.services.arui-login = {
-    description = "ARUI login system";
+  systemd.services.visr-login = {
+    description = "VISR login system";
 
     unitConfig.DefaultDependencies = false;
 
     wantedBy = [ "multi-user.target" ];
 
     requires = [
-      "arui-server.service"
-      "arui-boot.service"
+      "visr-server.service"
+      "visr-boot.service"
     ];
 
     after = [
-      "arui-early.target"
-      "arui-server.service"
-      "arui-boot.service"
+      "visr-early.target"
+      "visr-server.service"
+      "visr-boot.service"
     ];
 
-    before = [ "arui-desktop.service" ];
+    before = [ "visr-desktop.service" ];
 
     environment = graphicsEnvironment;
 
     serviceConfig =
       experienceServiceConfig
       // {
-        ExecStart = "${aruiLogin}/bin/AruiLogin";
+        ExecStart = "${visrLogin}/bin/VisrLogin";
       };
   };
 
@@ -260,22 +260,22 @@ in {
   # 4. DESKTOP
   #
 
-  systemd.services.arui-desktop = {
-    description = "ARUI desktop system";
+  systemd.services.visr-desktop = {
+    description = "VISR desktop system";
 
     unitConfig.DefaultDependencies = false;
 
     wantedBy = [ "multi-user.target" ];
 
     requires = [
-      "arui-server.service"
-      "arui-login.service"
+      "visr-server.service"
+      "visr-login.service"
     ];
 
     after = [
-      "arui-early.target"
-      "arui-server.service"
-      "arui-login.service"
+      "visr-early.target"
+      "visr-server.service"
+      "visr-login.service"
     ];
 
     environment = graphicsEnvironment;
@@ -284,7 +284,7 @@ in {
       experienceServiceConfig
       // {
         Type = "simple";
-        ExecStart = "${aruiDesktop}/bin/AruiDesktop";
+        ExecStart = "${visrDesktop}/bin/VisrDesktop";
       };
   };
 

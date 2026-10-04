@@ -2,22 +2,22 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Attach: ARUI Boot (VM :2345)",
+      "name": "Attach: VISR Boot (VM :2345)",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/src/Boot/AruiBoot",
+      "program": "${workspaceFolder}/build/src/Boot/VisrBoot",
       "cwd": "${workspaceFolder}",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "customLaunchSetupCommands": [
         {
-          "description": "Connect to the ARUI Boot extended-remote server",
+          "description": "Connect to the VISR Boot extended-remote server",
           "text": "-target-select extended-remote 127.0.0.1:2345",
           "ignoreFailures": false
         },
         {
-          "description": "Select the guest AruiBoot executable",
-          "text": "-interpreter-exec console \"set remote exec-file /run/current-system/sw/bin/AruiBoot\"",
+          "description": "Select the guest VisrBoot executable",
+          "text": "-interpreter-exec console \"set remote exec-file /run/current-system/sw/bin/VisrBoot\"",
           "ignoreFailures": false
         }
       ],
@@ -32,22 +32,22 @@
       "targetArchitecture": "x64"
     },
     {
-      "name": "Attach: ARUI Login (VM :2346)",
+      "name": "Attach: VISR Login (VM :2346)",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/AR-UI/Server/Login/AruiLogin",
+      "program": "${workspaceFolder}/build/VISR/Server/Login/VisrLogin",
       "cwd": "${workspaceFolder}",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "customLaunchSetupCommands": [
         {
-          "description": "Connect to the ARUI Login extended-remote server",
+          "description": "Connect to the VISR Login extended-remote server",
           "text": "-target-select extended-remote 127.0.0.1:2346",
           "ignoreFailures": false
         },
         {
-          "description": "Select the guest AruiLogin executable",
-          "text": "-interpreter-exec console \"set remote exec-file /run/current-system/sw/bin/AruiLogin\"",
+          "description": "Select the guest VisrLogin executable",
+          "text": "-interpreter-exec console \"set remote exec-file /run/current-system/sw/bin/VisrLogin\"",
           "ignoreFailures": false
         }
       ],
@@ -62,22 +62,22 @@
       "targetArchitecture": "x64"
     },
     {
-      "name": "Attach: ARUI Desktop (VM :2347)",
+      "name": "Attach: VISR Desktop (VM :2347)",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/AR-UI/Server/Desktop/AruiDesktop",
+      "program": "${workspaceFolder}/build/VISR/Server/Desktop/VisrDesktop",
       "cwd": "${workspaceFolder}",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "customLaunchSetupCommands": [
         {
-          "description": "Connect to the ARUI Desktop extended-remote server",
+          "description": "Connect to the VISR Desktop extended-remote server",
           "text": "-target-select extended-remote 127.0.0.1:2347",
           "ignoreFailures": false
         },
         {
-          "description": "Attach to the running AruiDesktop service process",
-          "text": "-target-attach ${input:aruiDesktopPid}",
+          "description": "Attach to the running VisrDesktop service process",
+          "text": "-target-attach ${input:visrDesktopPid}",
           "ignoreFailures": false
         }
       ],
@@ -94,9 +94,9 @@
   ],
   "inputs": [
     {
-      "id": "aruiDesktopPid",
+      "id": "visrDesktopPid",
       "type": "promptString",
-      "description": "AruiDesktop PID: ssh -p 2222 aros@127.0.0.1 systemctl show -p MainPID --value arui-desktop",
+      "description": "VisrDesktop PID: ssh -p 2222 aros@127.0.0.1 systemctl show -p MainPID --value visr-desktop",
       "default": "0"
     }
   ]

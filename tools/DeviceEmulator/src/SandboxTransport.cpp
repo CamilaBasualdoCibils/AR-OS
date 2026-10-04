@@ -1,5 +1,5 @@
-#include <AROS/DeviceEmulator/SandboxTransport.hpp>
-#include <AROS/DeviceEmulator/EmulatedXRDevice.hpp>
+#include <VISROS/DeviceEmulator/SandboxTransport.hpp>
+#include <VISROS/DeviceEmulator/EmulatedXRDevice.hpp>
 
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -11,7 +11,7 @@
 #include <span>
 #include <thread>
 
-namespace AROS::DeviceEmulator {
+namespace VISROS::DeviceEmulator {
 namespace {
 using namespace std::chrono_literals;
 
@@ -127,7 +127,7 @@ bool SandboxTransport::Connected() const noexcept {
 }
 
 std::string_view SandboxTransport::Name() const noexcept {
-    return xrConnected_.load() ? "AR-OS stereo XR stream" : rfb_.Name();
+    return xrConnected_.load() ? "VISR OS stereo XR stream" : rfb_.Name();
 }
 
 void SandboxTransport::Run(const std::stop_token stopToken) {
@@ -203,4 +203,4 @@ void SandboxTransport::TrackingRun(const std::stop_token stopToken) {
     }
 }
 
-} // namespace AROS::DeviceEmulator
+} // namespace VISROS::DeviceEmulator

@@ -1,4 +1,4 @@
-add_executable(AruiBoot main.cpp)
-target_include_directories(AruiBoot PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
-target_link_libraries(AruiBoot PRIVATE ARUI::Core ARUI::Presentation)
-arui_enable_runtime_instrumentation(AruiBoot)
+add_executable(VisrBoot main.cpp)
+target_include_directories(VisrBoot PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
+target_link_libraries(VisrBoot PRIVATE VISR::Core VISR::Presentation)
+visr_enable_runtime_instrumentation(VisrBoot)

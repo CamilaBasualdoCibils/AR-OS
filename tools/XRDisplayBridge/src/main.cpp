@@ -1,4 +1,4 @@
-#include <AROS/VirtualDisplay/RfbClient.hpp>
+#include <VISROS/VirtualDisplay/RfbClient.hpp>
 #include <GL/gl.h>
 #include <GL/glx.h>
 #define XR_USE_PLATFORM_XLIB
@@ -54,12 +54,12 @@ public:
     glfwTerminate();
   }
   int Run() {
-    std::cout << "XR Display Bridge: waiting for AR-OS framebuffer at "
+    std::cout << "XR Display Bridge: waiting for VISR OS framebuffer at "
               << rfb_.Endpoint() << "\n";
     while (!exit_) {
       glfwPollEvents();
       PollEvents();
-      AROS::VirtualDisplay::Frame incoming;
+      VISROS::VirtualDisplay::Frame incoming;
       if (rfb_.Poll(incoming)) {
         AcceptFrame(std::move(incoming));
       }
@@ -72,7 +72,7 @@ public:
   }
 
 private:
-  void AcceptFrame(AROS::VirtualDisplay::Frame incoming) {
+  void AcceptFrame(VISROS::VirtualDisplay::Frame incoming) {
     if (frame_.width != incoming.width || frame_.height != incoming.height)
       CreateSwapchain(incoming.width, incoming.height);
     frame_.width = incoming.width;
@@ -97,15 +97,15 @@ private:
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
     window_ =
-        glfwCreateWindow(16, 16, "AR-OS XR Display Bridge", nullptr, nullptr);
+        glfwCreateWindow(16, 16, "VISR OS XR Display Bridge", nullptr, nullptr);
     if (!window_)
       throw std::runtime_error("could not create the hidden OpenGL context");
     glfwMakeContextCurrent(window_);
     XrInstanceCreateInfo ci{XR_TYPE_INSTANCE_CREATE_INFO};
-    std::strncpy(ci.applicationInfo.applicationName, "AR-OS XR Display Bridge",
+    std::strncpy(ci.applicationInfo.applicationName, "VISR OS XR Display Bridge",
                  XR_MAX_APPLICATION_NAME_SIZE - 1);
     ci.applicationInfo.applicationVersion = 1;
-    std::strncpy(ci.applicationInfo.engineName, "AR-OS",
+    std::strncpy(ci.applicationInfo.engineName, "VISR OS",
                  XR_MAX_ENGINE_NAME_SIZE - 1);
     ci.applicationInfo.engineVersion = 1;
     ci.applicationInfo.apiVersion = XR_CURRENT_API_VERSION;
@@ -287,8 +287,8 @@ private:
     ei.layers = count ? layers.data() : nullptr;
     Check(xrEndFrame(session_, &ei), "end frame");
   }
-  AROS::VirtualDisplay::RfbClient rfb_;
-  AROS::VirtualDisplay::Frame frame_;
+  VISROS::VirtualDisplay::RfbClient rfb_;
+  VISROS::VirtualDisplay::Frame frame_;
   GLFWwindow *window_{};
   XrInstance instance_{};
   XrSystemId system_{};

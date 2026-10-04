@@ -1,14 +1,14 @@
 #pragma once
 
-#include <AROS/DeviceEmulator/EmulatedXRDevice.hpp>
-#include <AROS/DeviceEmulator/IDeviceTransport.hpp>
+#include <VISROS/DeviceEmulator/EmulatedXRDevice.hpp>
+#include <VISROS/DeviceEmulator/IDeviceTransport.hpp>
 
 #include <cstdint>
 #include <memory>
 
 struct GLFWwindow;
 
-namespace AROS::DeviceEmulator {
+namespace VISROS::DeviceEmulator {
 
 class EmulatorApplication {
 public:
@@ -44,4 +44,4 @@ private:
     std::array<float, 3> headEulerDegrees_ {0.0F, 0.0F, 0.0F};
 };
 
-} // namespace AROS::DeviceEmulator
+} // namespace VISROS::DeviceEmulator

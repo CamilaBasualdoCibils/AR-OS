@@ -1,37 +1,37 @@
 #pragma once
 
-#include "ARUI/Language/node.hpp"
-#include "ARUI/Presentation/IPresentationController.hpp"
-#include "ARUI/Presentation/RpcPresentationController.hpp"
+#include "VISR/Language/node.hpp"
+#include "VISR/Presentation/IPresentationController.hpp"
+#include "VISR/Presentation/RpcPresentationController.hpp"
 
 #include <cstdlib>
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <string>
 
-namespace AROS {
-inline std::unique_ptr<ARUI::Presentation::IPresentationController>
+namespace VISROS {
+inline std::unique_ptr<VISR::Presentation::IPresentationController>
 ConnectPresentationController() {
-  const char *host = std::getenv("ARUI_PRESENTATION_HOST");
-  const char *portEnv = std::getenv("ARUI_PRESENTATION_PORT");
+  const char *host = std::getenv("VISR_PRESENTATION_HOST");
+  const char *portEnv = std::getenv("VISR_PRESENTATION_PORT");
   if (!host) {
     host = "127.0.0.1";
   }
   const auto port = portEnv
                         ? static_cast<std::uint16_t>(std::stoi(portEnv))
-                        : ARUI::Presentation::DefaultPresentationPort;
+                        : VISR::Presentation::DefaultPresentationPort;
   spdlog::info("Connecting to presentation controller at {}:{}", host, port);
-  return std::make_unique<ARUI::Presentation::RpcPresentationController>(
+  return std::make_unique<VISR::Presentation::RpcPresentationController>(
       host, port);
 }
 
-inline void ShowSystemExperience(ARUI::Presentation::IPresentationController &controller,
+inline void ShowSystemExperience(VISR::Presentation::IPresentationController &controller,
                                  std::string label) {
-  using namespace ARUI::Language;
+  using namespace VISR::Language;
   Style style;
   style.width = {1.0, LengthUnit::Meter};
   style.height = {0.75, LengthUnit::Meter};
   style.zOffset = {-2.0, LengthUnit::Meter};
   controller.SetActiveTree(LSurface({LText(std::move(label))}, {}, std::move(style)));
 }
-} // namespace AROS
+} // namespace VISROS

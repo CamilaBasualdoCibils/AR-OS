@@ -1,8 +1,8 @@
 #pragma once
 
-#include <AROS/DeviceEmulator/IDeviceTransport.hpp>
-#include <AROS/DeviceEmulator/EmulatedXRDevice.hpp>
-#include <AROS/DeviceEmulator/RfbTransport.hpp>
+#include <VISROS/DeviceEmulator/IDeviceTransport.hpp>
+#include <VISROS/DeviceEmulator/EmulatedXRDevice.hpp>
+#include <VISROS/DeviceEmulator/RfbTransport.hpp>
 #include <array>
 #include <atomic>
 #include <cstdint>
@@ -10,7 +10,7 @@
 #include <thread>
 #include <vector>
 
-namespace AROS::DeviceEmulator {
+namespace VISROS::DeviceEmulator {
 
 class SandboxTransport final : public IDeviceTransport {
 public:
@@ -51,4 +51,4 @@ private:
     std::array<std::uint64_t, 2> consumedGeneration_ {};
 };
 
-} // namespace AROS::DeviceEmulator
+} // namespace VISROS::DeviceEmulator

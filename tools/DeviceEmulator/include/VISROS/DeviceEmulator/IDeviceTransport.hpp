@@ -2,7 +2,7 @@
 
 #include <string_view>
 
-namespace AROS::DeviceEmulator {
+namespace VISROS::DeviceEmulator {
 
 class EmulatedXRDevice;
 struct Pose;
@@ -25,4 +25,4 @@ public:
     [[nodiscard]] std::string_view Name() const noexcept override;
 };
 
-} // namespace AROS::DeviceEmulator
+} // namespace VISROS::DeviceEmulator

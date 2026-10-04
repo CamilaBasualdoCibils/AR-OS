@@ -1,10 +1,10 @@
-#include <AROS/DeviceEmulator/EmulatedXRDevice.hpp>
+#include <VISROS/DeviceEmulator/EmulatedXRDevice.hpp>
 
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
 
-namespace AROS::DeviceEmulator {
+namespace VISROS::DeviceEmulator {
 namespace {
 
 constexpr std::uint32_t kPlaceholderWidth = 640;
@@ -116,4 +116,4 @@ void EmulatedXRDevice::StoreImage(
     destination.generation = nextGeneration_++;
 }
 
-} // namespace AROS::DeviceEmulator
+} // namespace VISROS::DeviceEmulator

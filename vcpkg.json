@@ -1,5 +1,5 @@
 {
-  "name": "ar-os",
+  "name": "visr-os",
   "version-string": "0.1.0",
   "dependencies": [
     "boost-container",

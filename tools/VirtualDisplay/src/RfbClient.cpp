@@ -1,4 +1,4 @@
-#include <AROS/VirtualDisplay/RfbClient.hpp>
+#include <VISROS/VirtualDisplay/RfbClient.hpp>
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -14,7 +14,7 @@
 #include <stdexcept>
 #include <thread>
 
-namespace AROS::VirtualDisplay {
+namespace VISROS::VirtualDisplay {
 namespace {
 
 using namespace std::chrono_literals;
@@ -211,7 +211,7 @@ void RfbClient::RunConnection(const int socket, const std::stop_token stopToken)
     std::vector<std::uint8_t> framebuffer(static_cast<std::size_t>(width) * height * 4U, 0U);
     RequestFramebuffer(socket, width, height, false);
     connected_.store(true);
-    std::cout << "" << logPrefix_ << " RFB: connected to AR-OS display ("
+    std::cout << "" << logPrefix_ << " RFB: connected to VISR OS display ("
               << width << 'x' << height << ')' << std::endl;
     bool reportedFirstFrame = false;
 
@@ -278,4 +278,4 @@ void RfbClient::RunConnection(const int socket, const std::stop_token stopToken)
     }
 }
 
-} // namespace AROS::VirtualDisplay
+} // namespace VISROS::VirtualDisplay

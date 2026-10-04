@@ -10,7 +10,7 @@
       "-device virtio-vga-gl,blob=on,hostmem=512M"
       "-display egl-headless,rendernode=/dev/dri/by-path/pci-0000:06:00.0-render"
       "-vnc 127.0.0.1:1,share=force-shared"
-      "-serial file:$AROS_VM_SERIAL_LOG"
+      "-serial file:$VISROS_VM_SERIAL_LOG"
       "-monitor none"
     ];
     qemu.consoles = [ "ttyS0,115200n8" "tty0" ];

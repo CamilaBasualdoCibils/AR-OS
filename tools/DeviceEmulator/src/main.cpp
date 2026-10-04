@@ -1,6 +1,6 @@
 #include "EmulatorApplication.hpp"
 
-#include <AROS/DeviceEmulator/SandboxTransport.hpp>
+#include <VISROS/DeviceEmulator/SandboxTransport.hpp>
 
 #include <exception>
 #include <iostream>
@@ -9,11 +9,11 @@
 int main()
 {
     try {
-        AROS::DeviceEmulator::EmulatorApplication application(
-            std::make_unique<AROS::DeviceEmulator::SandboxTransport>());
+        VISROS::DeviceEmulator::EmulatorApplication application(
+            std::make_unique<VISROS::DeviceEmulator::SandboxTransport>());
         return application.Run();
     } catch (const std::exception& error) {
-        std::cerr << "AR-OS Device Emulator: " << error.what() << '\n';
+        std::cerr << "VISR OS Device Emulator: " << error.what() << '\n';
         return 1;
     }
 }

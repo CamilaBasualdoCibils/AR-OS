@@ -1,9 +1,9 @@
 #pragma once
-#include <AROS/DeviceEmulator/IDeviceTransport.hpp>
-#include <AROS/VirtualDisplay/RfbClient.hpp>
+#include <VISROS/DeviceEmulator/IDeviceTransport.hpp>
+#include <VISROS/VirtualDisplay/RfbClient.hpp>
 #include <cstdint>
 #include <string>
-namespace AROS::DeviceEmulator {
+namespace VISROS::DeviceEmulator {
 class RfbTransport final:public IDeviceTransport {
 public:
  explicit RfbTransport(std::string host="127.0.0.1",std::uint16_t port=5901); ~RfbTransport() override;

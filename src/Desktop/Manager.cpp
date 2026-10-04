@@ -1,6 +1,6 @@
 #include "Manager.hpp"
 
-namespace AROS::Desktop {
-// Desktop policy managers live in AR-OS. Their behavior will be introduced
-// independently from the ARUI runtime/RPC boundary.
+namespace VISROS::Desktop {
+// Desktop policy managers live in VISR OS. Their behavior will be introduced
+// independently from the VISR runtime/RPC boundary.
 }

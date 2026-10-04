@@ -3,7 +3,7 @@ find_package(imgui CONFIG REQUIRED)
 find_package(OpenGL REQUIRED)
 
 add_executable(
-    AROSDeviceEmulator
+    VISROSDeviceEmulator
     src/main.cpp
     src/EmulatedXRDevice.cpp
     src/EmulatorApplication.cpp
@@ -11,22 +11,22 @@ add_executable(
     src/SandboxTransport.cpp
 )
 
-target_compile_features(AROSDeviceEmulator PRIVATE cxx_std_23)
+target_compile_features(VISROSDeviceEmulator PRIVATE cxx_std_23)
 target_include_directories(
-    AROSDeviceEmulator
+    VISROSDeviceEmulator
     PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/include"
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
 target_link_libraries(
-    AROSDeviceEmulator
+    VISROSDeviceEmulator
     PRIVATE
         glfw
         imgui::imgui
         OpenGL::GL
-        AROSVirtualDisplay
+        VISROSVirtualDisplay
 )
 
-set_target_properties(AROSDeviceEmulator PROPERTIES OUTPUT_NAME ar-os-device-emulator)
+set_target_properties(VISROSDeviceEmulator PROPERTIES OUTPUT_NAME visr-os-device-emulator)
 
-install(TARGETS AROSDeviceEmulator RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS VISROSDeviceEmulator RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
