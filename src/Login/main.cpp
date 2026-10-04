@@ -8,10 +8,10 @@ int main() {
   ARUI::Debug::AllowConfiguredDebuggerAttach();
   try {
     auto presentation = AROS::ConnectPresentationController();
-    AROS::ShowSystemExperience(*presentation, "AR-OS Boot");
+    AROS::ShowSystemExperience(*presentation, "AR-OS Login");
     return 0;
   } catch (const std::exception &error) {
-    std::cerr << "arui-boot: " << error.what() << '\n';
+    std::cerr << "arui-login: " << error.what() << '\n';
     return 1;
   }
 }

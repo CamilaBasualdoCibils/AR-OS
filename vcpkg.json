@@ -18,7 +18,9 @@
     "glm",
     {
       "name": "glfw3",
-      "features": [ "wayland" ]
+      "features": [
+        "wayland"
+      ]
     },
     {
       "name": "imgui",
@@ -33,20 +35,27 @@
     "implot",
     {
       "name": "mimalloc",
-      "features": [ "override" ]
+      "features": [
+        "override"
+      ]
     },
     "nlohmann-json",
     {
       "name": "openxr-loader",
-      "features": [ "vulkan" ]
+      "features": [
+        "vulkan"
+      ]
     },
     "pugixml",
     {
       "name": "spdlog",
-      "features": [ "fmt" ]
+      "features": [
+        "fmt"
+      ]
     },
     "tracy",
     "vulkan",
-    "vulkan-memory-allocator"
+    "vulkan-memory-allocator",
+    "rpclib"
   ]
 }

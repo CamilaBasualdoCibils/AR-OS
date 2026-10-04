@@ -32,6 +32,9 @@
             install -Dm755 "$src" "$out/bin/${executable}"
           '';
         };
+      aruiServer = bundledExecutable {
+        envName = "AROS_ARUI_SERVER"; executable = "AruiServer"; pname = "arui-server";
+      };
       aruiBoot = bundledExecutable {
         envName = "AROS_ARUI_BOOT"; executable = "AruiBoot"; pname = "arui-boot";
       };
@@ -43,7 +46,7 @@
       };
       makeSystem = module: nixpkgs.lib.nixosSystem {
         inherit system;
-        specialArgs = { inherit aruiBoot aruiLogin aruiDesktop; };
+        specialArgs = { inherit aruiServer aruiBoot aruiLogin aruiDesktop; };
         modules = [ module ];
       };
       baseSystem = makeSystem ./nix/systems/base.nix;

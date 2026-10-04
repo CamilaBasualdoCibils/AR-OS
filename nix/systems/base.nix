@@ -1,4 +1,4 @@
-{ aruiBoot, aruiDesktop, aruiLogin, lib, pkgs, ... }:
+{ aruiBoot, aruiDesktop, aruiLogin, aruiServer, lib, pkgs, ... }:
 let
   graphicsEnvironment = {
     LIBGL_DRIVERS_PATH = "/run/opengl-driver/lib/dri";
@@ -13,7 +13,7 @@ let
     XRT_COMPOSITOR_NULL = "1";
     ARUI_FONT_PATH = "${pkgs.noto-fonts}/share/fonts/noto/NotoSans.ttf";
   };
-  aruiServiceConfig = {
+  experienceServiceConfig = {
     Type = "oneshot";
     User = "aros";
     SupplementaryGroups = [ "video" "render" ];
@@ -63,35 +63,55 @@ in {
     };
   };
 
-  environment.systemPackages = [ aruiBoot aruiLogin aruiDesktop ];
+  environment.systemPackages = [ aruiServer aruiBoot aruiLogin aruiDesktop ];
+  systemd.services.arui-server = {
+    description = "ARUI runtime and presentation service";
+    unitConfig.DefaultDependencies = false;
+    wantedBy = [ "multi-user.target" ];
+    before = [ "arui-boot.service" ];
+    after = [ "monado-runtime.socket" "systemd-udev-trigger.service" ];
+    wants = [ "monado-runtime.socket" "systemd-udev-trigger.service" ];
+    environment = graphicsEnvironment;
+    serviceConfig = {
+      Type = "simple";
+      User = "aros";
+      SupplementaryGroups = [ "video" "render" ];
+      ExecStart = "${aruiServer}/bin/AruiServer";
+      Restart = "on-failure";
+      StandardOutput = "journal+console";
+      StandardError = "journal+console";
+    };
+  };
   systemd.services.arui-boot = {
     description = "ARUI boot system";
     unitConfig.DefaultDependencies = false;
     wantedBy = [ "multi-user.target" ];
     before = [ "arui-login.service" ];
-    after = [ "monado-runtime.socket" "systemd-udev-trigger.service" ];
-    wants = [ "monado-runtime.socket" "systemd-udev-trigger.service" ];
+    after = [ "arui-server.service" ];
+    requires = [ "arui-server.service" ];
     environment = graphicsEnvironment;
-    serviceConfig = aruiServiceConfig // { ExecStart = "${aruiBoot}/bin/AruiBoot"; };
+    serviceConfig = experienceServiceConfig // { ExecStart = "${aruiBoot}/bin/AruiBoot"; };
   };
   systemd.services.arui-login = {
     description = "ARUI login system";
     unitConfig.DefaultDependencies = false;
     wantedBy = [ "multi-user.target" ];
-    after = [ "arui-boot.service" ];
+    after = [ "arui-server.service" "arui-boot.service" ];
     before = [ "arui-desktop.service" ];
+    requires = [ "arui-server.service" ];
     wants = [ "arui-boot.service" ];
     environment = graphicsEnvironment;
-    serviceConfig = aruiServiceConfig // { ExecStart = "${aruiLogin}/bin/AruiLogin"; };
+    serviceConfig = experienceServiceConfig // { ExecStart = "${aruiLogin}/bin/AruiLogin"; };
   };
   systemd.services.arui-desktop = {
     description = "ARUI desktop system";
     unitConfig.DefaultDependencies = false;
     wantedBy = [ "multi-user.target" ];
-    after = [ "arui-login.service" ];
+    after = [ "arui-server.service" "arui-login.service" ];
+    requires = [ "arui-server.service" ];
     wants = [ "arui-login.service" ];
     environment = graphicsEnvironment;
-    serviceConfig = aruiServiceConfig // {
+    serviceConfig = experienceServiceConfig // {
       Type = "simple";
       ExecStart = "${aruiDesktop}/bin/AruiDesktop";
     };

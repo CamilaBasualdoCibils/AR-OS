@@ -21,7 +21,7 @@ add_subdirectory(tools)
 
 add_custom_target(
     build-base
-    COMMAND "${CMAKE_COMMAND}" -E env "AROS_ARUI_DESKTOP=$<TARGET_FILE:AruiDesktop>" "AROS_ARUI_LOGIN=$<TARGET_FILE:AruiLogin>" "AROS_ARUI_BOOT=$<TARGET_FILE:AruiBoot>" "${CMAKE_SOURCE_DIR}/scripts/build-base.sh"
+    COMMAND "${CMAKE_COMMAND}" -E env "AROS_ARUI_SERVER=$<TARGET_FILE:AruiServer>" "AROS_ARUI_DESKTOP=$<TARGET_FILE:AruiDesktop>" "AROS_ARUI_LOGIN=$<TARGET_FILE:AruiLogin>" "AROS_ARUI_BOOT=$<TARGET_FILE:AruiBoot>" "${CMAKE_SOURCE_DIR}/scripts/build-base.sh"
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     COMMENT "Building the hardware-independent AR-OS Base"
     USES_TERMINAL
@@ -30,7 +30,7 @@ add_custom_target(
 
 add_custom_target(
     build-sandbox
-    COMMAND "${CMAKE_COMMAND}" -E env "AROS_ARUI_DESKTOP=$<TARGET_FILE:AruiDesktop>" "AROS_ARUI_LOGIN=$<TARGET_FILE:AruiLogin>" "AROS_ARUI_BOOT=$<TARGET_FILE:AruiBoot>" "${CMAKE_SOURCE_DIR}/scripts/build-vm.sh"
+    COMMAND "${CMAKE_COMMAND}" -E env "AROS_ARUI_SERVER=$<TARGET_FILE:AruiServer>" "AROS_ARUI_DESKTOP=$<TARGET_FILE:AruiDesktop>" "AROS_ARUI_LOGIN=$<TARGET_FILE:AruiLogin>" "AROS_ARUI_BOOT=$<TARGET_FILE:AruiBoot>" "${CMAKE_SOURCE_DIR}/scripts/build-vm.sh"
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     COMMENT "Building the AR-OS NixOS VM"
     USES_TERMINAL
@@ -46,8 +46,8 @@ add_custom_target(
     VERBATIM
 )
 
-add_dependencies(build-base AruiBoot AruiLogin AruiDesktop)
-add_dependencies(build-sandbox AruiBoot AruiLogin AruiDesktop)
+add_dependencies(build-base AruiServer AruiBoot AruiLogin AruiDesktop)
+add_dependencies(build-sandbox AruiServer AruiBoot AruiLogin AruiDesktop)
 add_dependencies(run-sandbox build-sandbox)
 
 if(AROS_BUILD_XR_DISPLAY_BRIDGE)

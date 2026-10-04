@@ -16,9 +16,9 @@ Spatial Applications
 Nix constructs the operating system in two layers. **Base** is
 hardware-independent AR-OS; **Sandbox** imports Base and adds QEMU, developer
 access, host display integration, and streaming tools. The root CMake project
-builds native AR-OS tools and the ARUI subproject. Its AruiDesktop, AruiLogin,
-and AruiBoot artifacts are patched
-and bundled into the NixOS closure during every VM build.
+builds native AR-OS tools and the ARUI subproject. The ARUI-owned `AruiServer`
+and the AR-OS-owned `AruiBoot`, `AruiLogin`, and `AruiDesktop` artifacts are
+patched and bundled into the NixOS closure during every VM build.
 
 ## Device backends
 
@@ -37,9 +37,10 @@ ARUI Simulator            AR-OS Device Emulator
 = not part of AR-OS       = excluded from production by default
 ```
 
-AR-OS does not launch the standalone ARUI Simulator. The current AruiDesktop
-links its presenter library internally and is bundled as the early OS server;
-the Device Emulator and XR Display Bridge remain unrelated host tools.
+AR-OS does not launch the standalone ARUI Simulator. `AruiServer` owns the
+runtime, renderer, and OpenXR session; AR-OS system experiences control its
+presentation through the privileged loopback RPC service. The Device Emulator
+and XR Display Bridge remain unrelated host tools.
 
 ## Checkout and prerequisites
 
@@ -155,8 +156,8 @@ The Device Emulator is the visible host-side fake XR device. QEMU publishes its
 headless virtual display through loopback RFB; both the emulator and XR bridge
 consume it through the shared transport. See `tools/DeviceEmulator/README.md`.
 
-The Sandbox VM is a small diagnostics environment. It contains AruiBoot,
-AruiLogin, AruiDesktop, GStreamer, and debugging tools, but no Device Emulator, compiler, source-control
+The Sandbox VM is a small diagnostics environment. It contains AruiServer,
+AruiBoot, AruiLogin, AruiDesktop, GStreamer, and debugging tools, but no Device Emulator, compiler, source-control
 client, Nix CLI, desktop environment, compositor, or Xwayland. It boots
 Linux/systemd, initializes Mesa, and provides SSH plus the requested graphics
 inspection commands. It does not run any graphics-report service automatically.
@@ -232,34 +233,37 @@ loopback-only gdbservers are Sandbox features and are absent from Base.
 
 ## Early ARUI lifecycle
 
-Every VM build bundles three native systems: AR-OS owns `AruiBoot`, while the
-ARUI repository owns `AruiLogin` and `AruiDesktop`. Nix patches their ELF
-interpreters and runtime paths before placing them in the immutable OS closure.
+Every VM build bundles four native systems. The ARUI repository owns
+`AruiServer`; AR-OS owns `AruiBoot`, `AruiLogin`, and `AruiDesktop`. Nix patches
+their ELF interpreters and runtime paths before placing them in the immutable OS
+closure.
 
-Monado is installed as the system's default OpenXR runtime. Because the ARUI
-lifecycle begins before a graphical user session exists, AR-OS exposes a
-system-level Monado socket running as the `aros` user. Every ARUI stage receives
-that manifest and runtime directory explicitly.
+Monado is installed as the system's default OpenXR runtime. `AruiServer` opens
+one long-lived OpenXR session and owns the runtime, scene, renderer, and
+loopback-only presentation RPC endpoint. Boot, Login, and Desktop use
+`IPresentationController` client proxies; they never link ARUI runtime, render,
+or XR internals.
 
-The units are ordered as a strict ownership handoff:
+The units are ordered without handing off the XR session:
 
     monado-runtime.socket
              |
-        arui-boot.service      transient; earliest boot visualization
+        arui-server.service    long-running runtime/renderer/RPC service
              |
-        arui-login.service     transient placeholder login
+        arui-boot.service      transient boot presentation client
              |
-        arui-desktop.service   long-running desktop
+        arui-login.service     transient login presentation client
+             |
+        arui-desktop.service   long-running desktop policy client
 
-`AruiBoot` and `AruiLogin` currently initialize the OpenXR presenter and OpenGL
-render backend, perform an empty frame, and exit. Their process teardown releases
-the OpenXR session before the next stage starts. `AruiDesktop` then owns the
-runtime until shutdown.
+Each system experience resets and replaces the current test presentation through
+RPC. Switching stages does not restart `AruiServer`, the renderer, or the OpenXR
+session.
 
 Inspect the lifecycle with:
 
-    systemctl status monado-runtime.socket arui-boot arui-login arui-desktop
-    journalctl -b -u monado-runtime.service -u arui-boot -u arui-login -u arui-desktop
+    systemctl status monado-runtime.socket arui-server arui-boot arui-login arui-desktop
+    journalctl -b -u monado-runtime.service -u arui-server -u arui-boot -u arui-login -u arui-desktop
 
 
 ## Remote debugging ARUI systems
@@ -287,7 +291,7 @@ The equivalent manual boot sequence is:
 
 To attach to the desktop instead:
 
-    gdb build/AR-UI/Server/Desktop/AruiDesktop
+    gdb build/src/Desktop/AruiDesktop
     (gdb) target extended-remote 127.0.0.1:2347
     (gdb) attach <pid>
 
