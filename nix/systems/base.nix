@@ -1,10 +1,18 @@
 { aruiBoot, aruiDesktop, aruiLogin, aruiServer, lib, pkgs, ... }:
 let
+  aruiServerReadyFile = "/run/arui-server/xr-first-frame";
+  waitForAruiServerReady = pkgs.writeShellScript "wait-for-arui-server-ready" ''
+    while [ ! -e ${aruiServerReadyFile} ]; do
+      sleep 0.1
+    done
+  '';
+
   graphicsEnvironment = {
     LIBGL_DRIVERS_PATH = "/run/opengl-driver/lib/dri";
     __EGL_VENDOR_LIBRARY_DIRS = "/run/opengl-driver/share/glvnd/egl_vendor.d";
     XR_RUNTIME_JSON = "${pkgs.monado}/share/openxr/1/openxr_monado.json";
     XDG_RUNTIME_DIR = "/run/arui-monado";
+    XDG_CONFIG_HOME = "/etc/xdg";
     EGL_PLATFORM = "surfaceless";
 
     # Monado uses Vulkan while ARUI currently uses OpenGL. Force both APIs
@@ -36,6 +44,8 @@ in {
   boot.loader.grub.devices = lib.mkDefault [ "nodev" ];
 
   networking.hostName = "ar-os";
+  # Keep ARUI's early, local RPC endpoint resolvable before network services.
+  networking.hosts."127.0.0.1" = [ "localhost" ];
   networking.useDHCP = true;
 
   users.users.aros = {
@@ -48,8 +58,14 @@ in {
     defaultRuntime = true;
   };
 
+  environment.etc."xdg/monado/config_v0.json".text = builtins.toJSON {
+    active = "remote";
+    remote = { version = 0; port = 4244; };
+  };
+
   systemd.tmpfiles.rules = [
     "d /run/arui-monado 0750 aros users -"
+    "d /run/arui-server 0750 aros users -"
   ];
 
   #
@@ -152,14 +168,19 @@ in {
       "monado-runtime.socket"
     ];
 
-    environment = graphicsEnvironment;
+    environment = graphicsEnvironment // {
+      ARUI_SERVER_READY_FILE = aruiServerReadyFile;
+    };
 
     serviceConfig = {
       Type = "simple";
       User = "aros";
       SupplementaryGroups = [ "video" "render" ];
 
+      ExecStartPre = "${pkgs.coreutils}/bin/rm -f ${aruiServerReadyFile}";
       ExecStart = "${aruiServer}/bin/AruiServer";
+      ExecStartPost = waitForAruiServerReady;
+      TimeoutStartSec = "infinity";
 
       Restart = "on-failure";
 

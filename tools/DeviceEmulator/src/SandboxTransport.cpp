@@ -9,6 +9,7 @@
 #include <chrono>
 #include <cstring>
 #include <span>
+#include <thread>
 
 namespace AROS::DeviceEmulator {
 namespace {
@@ -30,17 +31,62 @@ std::uint32_t ReadU32(const std::uint8_t* bytes) {
     std::memcpy(&value, bytes, sizeof(value));
     return ntohl(value);
 }
+
+bool SendAll(const int socket, std::span<const std::uint8_t> bytes) {
+    std::size_t sent = 0;
+    while (sent < bytes.size()) {
+        const auto count = send(socket, bytes.data() + sent, bytes.size() - sent, MSG_NOSIGNAL);
+        if (count <= 0) return false;
+        sent += static_cast<std::size_t>(count);
+    }
+    return true;
+}
+
+struct RemotePose { std::array<float, 4> orientation; std::array<float, 3> position; };
+struct RemoteFov { float left, right, up, down; };
+struct RemoteView { RemoteFov fov; RemotePose pose; std::uint32_t pad; };
+struct RemoteHead { std::array<RemoteView, 2> views; RemotePose center; bool perViewDataValid; std::array<bool, 3> pad {}; };
+struct RemoteController {
+    RemotePose pose {}; std::array<float, 3> linearVelocity {}, angularVelocity {};
+    std::array<float, 5> handCurl {}; std::array<float, 1> trigger {}, squeeze {}, squeezeForce {};
+    std::array<float, 2> thumbstick {}; std::array<float, 1> trackpadForce {}; std::array<float, 2> trackpad {};
+    std::array<bool, 16> flags {};
+};
+struct RemoteData { std::uint64_t header; RemoteHead head; RemoteController left, right; };
+static_assert(sizeof(RemoteData) == 376, "Monado remote-driver ABI changed");
+
+RemoteData MakeRemoteData(const Pose& pose, const float ipd) {
+    RemoteData data {};
+    std::memcpy(&data.header, "mndrmt3", 8);
+    data.head.center = {pose.orientation, pose.position};
+    data.head.perViewDataValid = true;
+    for (std::size_t eye = 0; eye < data.head.views.size(); ++eye) {
+        auto& view = data.head.views[eye];
+        view.fov = {-0.8F, 0.8F, 0.8F, -0.8F};
+        view.pose.orientation = {0.0F, 0.0F, 0.0F, 1.0F};
+        view.pose.position = {eye == 0 ? -ipd * 0.5F : ipd * 0.5F, 0.0F, 0.0F};
+    }
+    return data;
+}
 } // namespace
 
 SandboxTransport::SandboxTransport()
-    : rfb_(), worker_([this](std::stop_token token) { Run(token); }) {}
+    : rfb_(),
+      worker_([this](std::stop_token token) { Run(token); }),
+      trackingWorker_([this](std::stop_token token) { TrackingRun(token); }) {}
 
 SandboxTransport::~SandboxTransport() {
     worker_.request_stop();
+    trackingWorker_.request_stop();
     const int socket = socket_.exchange(-1);
     if (socket >= 0) {
         shutdown(socket, SHUT_RDWR);
         close(socket);
+    }
+    const int trackingSocket = trackingSocket_.exchange(-1);
+    if (trackingSocket >= 0) {
+        shutdown(trackingSocket, SHUT_RDWR);
+        close(trackingSocket);
     }
 }
 
@@ -70,6 +116,12 @@ void SandboxTransport::Poll(EmulatedXRDevice& device) {
                                   frames[eye].pixels);
 }
 
+void SandboxTransport::SetHeadState(const Pose& pose, const float interPupillaryDistance) {
+    std::scoped_lock lock(trackingMutex_);
+    trackingPose_ = pose;
+    interPupillaryDistance_ = interPupillaryDistance;
+}
+
 bool SandboxTransport::Connected() const noexcept {
     return xrConnected_.load() || rfb_.Connected();
 }
@@ -88,7 +140,7 @@ void SandboxTransport::Run(const std::stop_token stopToken) {
         socket_.store(connection);
         sockaddr_in address {};
         address.sin_family = AF_INET;
-        address.sin_port = htons(4242);
+        address.sin_port = htons(4245);
         inet_pton(AF_INET, "127.0.0.1", &address.sin_addr);
         if (connect(connection, reinterpret_cast<sockaddr*>(&address),
                     sizeof(address)) != 0) {
@@ -118,6 +170,36 @@ void SandboxTransport::Run(const std::stop_token stopToken) {
         }
         xrConnected_.store(false);
         if (socket_.exchange(-1) == connection) close(connection);
+    }
+}
+
+void SandboxTransport::TrackingRun(const std::stop_token stopToken) {
+    using namespace std::chrono_literals;
+    while (!stopToken.stop_requested()) {
+        const int connection = ::socket(AF_INET, SOCK_STREAM, 0);
+        if (connection < 0) { std::this_thread::sleep_for(500ms); continue; }
+        trackingSocket_.store(connection);
+        sockaddr_in address {};
+        address.sin_family = AF_INET;
+        address.sin_port = htons(4244);
+        inet_pton(AF_INET, "127.0.0.1", &address.sin_addr);
+        if (connect(connection, reinterpret_cast<sockaddr*>(&address), sizeof(address)) != 0) {
+            close(connection); trackingSocket_.store(-1); std::this_thread::sleep_for(500ms); continue;
+        }
+        std::array<std::uint8_t, sizeof(RemoteData)> initial {};
+        if (!ReceiveAll(connection, initial) || !ReceiveAll(connection, initial)) {
+            close(connection); trackingSocket_.store(-1); continue;
+        }
+        trackingConnected_.store(true);
+        while (!stopToken.stop_requested()) {
+            Pose pose; float ipd;
+            { std::scoped_lock lock(trackingMutex_); pose = trackingPose_; ipd = interPupillaryDistance_; }
+            const RemoteData data = MakeRemoteData(pose, ipd);
+            if (!SendAll(connection, std::span {reinterpret_cast<const std::uint8_t*>(&data), sizeof(data)})) break;
+            std::this_thread::sleep_for(16ms);
+        }
+        trackingConnected_.store(false);
+        if (trackingSocket_.exchange(-1) == connection) close(connection);
     }
 }
 

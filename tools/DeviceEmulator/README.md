@@ -40,7 +40,7 @@ endpoint. Linux sees a normal `virtio-vga` screen; QEMU publishes its framebuffe
 on loopback port 5901; and the emulator consumes raw framebuffer updates and
 mirrors them into both eyes. When no VM is present the emulator remains open and
 shows two separate "No video signal" textures. RFB remains the early boot
-transport. QEMU also forwards loopback port 4242 to ARUI Desktop's raw stereo
+transport. QEMU also forwards loopback port 4245 to ARUI Server's raw stereo
 publisher; the combined Sandbox transport automatically switches the emulator
 to OpenXR mode when those frames arrive.
 
@@ -56,6 +56,4 @@ cmake --build build --target AROSDeviceEmulator
 
 Current functionality includes host visualization, QEMU boot-framebuffer
 capture, mirrored boot output, a working Monado OpenXR session in the guest,
-and independent streamed eye images. Monado currently supplies a simulated
-head pose; tracking input, hands, and controllers are not yet transported from
-the emulator to the guest.
+and independent streamed eye images. The emulator drives Monado's built-in remote HMD over a dedicated forwarded port: its Fake HMD Tracking controls set the 6DoF head pose and IPD in the guest runtime. Hand and controller input are not sent.

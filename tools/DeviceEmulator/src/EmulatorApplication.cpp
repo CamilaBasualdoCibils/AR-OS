@@ -6,6 +6,7 @@
 #include <imgui_impl_opengl3.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <stdexcept>
 #include <utility>
@@ -33,6 +34,21 @@ ImVec2 FitImage(const EyeImage& image, const ImVec2 available)
 const char* ModeName(const DeviceMode mode)
 {
     return mode == DeviceMode::BootDisplay ? "Boot Display" : "OpenXR";
+}
+
+std::array<float, 4> EulerDegreesToQuaternion(const std::array<float, 3>& degrees)
+{
+    constexpr float pi = 3.14159265358979323846F;
+    const float yaw = degrees[0] * pi / 360.0F;
+    const float pitch = degrees[1] * pi / 360.0F;
+    const float roll = degrees[2] * pi / 360.0F;
+    const float cy = std::cos(yaw), sy = std::sin(yaw);
+    const float cp = std::cos(pitch), sp = std::sin(pitch);
+    const float cr = std::cos(roll), sr = std::sin(roll);
+    return {sr * cp * cy - cr * sp * sy,
+            cr * sp * cy + sr * cp * sy,
+            cr * cp * sy - sr * sp * cy,
+            cr * cp * cy + sr * sp * sy};
 }
 
 } // namespace
@@ -170,7 +186,7 @@ void EmulatorApplication::DrawInterface()
     ImGui::Separator();
 
     const ImVec2 available = ImGui::GetContentRegionAvail();
-    const float statusHeight = 145.0F;
+    const float statusHeight = 285.0F;
     const float eyeHeight = std::max(220.0F, available.y - statusHeight);
     const float spacing = ImGui::GetStyle().ItemSpacing.x;
     const float eyeWidth = (available.x - spacing) * 0.5F;
@@ -232,6 +248,19 @@ void EmulatorApplication::DrawStatus()
     ImGui::SetNextItemWidth(180.0F);
     if (ImGui::Combo("Mode", &mode, "Boot Display\0OpenXR\0")) {
         device_.SetMode(mode == 0 ? DeviceMode::BootDisplay : DeviceMode::OpenXR);
+    }
+
+    ImGui::SeparatorText("Fake HMD tracking");
+    bool headChanged = false;
+    ImGui::SetNextItemWidth(250.0F);
+    headChanged |= ImGui::DragFloat3("Head position (m)", headPose_.position.data(), 0.01F);
+    ImGui::SetNextItemWidth(250.0F);
+    headChanged |= ImGui::DragFloat3("Head yaw, pitch, roll (deg)", headEulerDegrees_.data(), 0.25F);
+    ImGui::SetNextItemWidth(250.0F);
+    headChanged |= ImGui::SliderFloat("Eye distance (IPD, m)", &interPupillaryDistance_, 0.045F, 0.085F, "%.3f");
+    if (headChanged) {
+        headPose_.orientation = EulerDegreesToQuaternion(headEulerDegrees_);
+        transport_->SetHeadState(headPose_, interPupillaryDistance_);
     }
 
     const EyeImage& left = device_.Image(Eye::Left);

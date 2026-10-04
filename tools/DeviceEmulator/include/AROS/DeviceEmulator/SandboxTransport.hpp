@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AROS/DeviceEmulator/IDeviceTransport.hpp>
+#include <AROS/DeviceEmulator/EmulatedXRDevice.hpp>
 #include <AROS/DeviceEmulator/RfbTransport.hpp>
 #include <array>
 #include <atomic>
@@ -19,6 +20,7 @@ public:
     SandboxTransport& operator=(const SandboxTransport&) = delete;
 
     void Poll(EmulatedXRDevice& device) override;
+    void SetHeadState(const Pose& pose, float interPupillaryDistance) override;
     [[nodiscard]] bool Connected() const noexcept override;
     [[nodiscard]] std::string_view Name() const noexcept override;
 
@@ -31,9 +33,16 @@ private:
         std::uint64_t generation {};
     };
     void Run(std::stop_token stopToken);
+    void TrackingRun(std::stop_token stopToken);
 
     RfbTransport rfb_;
     std::jthread worker_;
+    std::jthread trackingWorker_;
+    std::atomic_bool trackingConnected_ {false};
+    std::atomic_int trackingSocket_ {-1};
+    std::mutex trackingMutex_;
+    Pose trackingPose_ {{0.0F, 1.6F, 0.0F}, {0.0F, 0.0F, 0.0F, 1.0F}};
+    float interPupillaryDistance_ {0.064F};
     std::atomic_bool xrConnected_ {false};
     std::atomic_int socket_ {-1};
     std::mutex mutex_;

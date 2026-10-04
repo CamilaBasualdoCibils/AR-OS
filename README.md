@@ -193,9 +193,7 @@ AR-OS provides it as a thin alias for Khronos' `openxr_runtime_list`.
 
 The Sandbox now provides a working in-guest Monado OpenXR session and streams
 independent raw RGBA eye frames to the Device Emulator after the RFB boot-display
-phase. Monado currently supplies a simulated head pose. Emulator-to-guest
-tracking, hands, controllers, and a production encoded transport remain future
-integration points.
+phase. The Device Emulator supplies Monado's remote HMD head pose and IPD through the sandbox's dedicated tracking transport. Hand and controller input remain out of scope.
 
 ## XR Display Bridge
 

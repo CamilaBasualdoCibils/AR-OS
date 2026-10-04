@@ -39,6 +39,9 @@ private:
     Texture leftTexture_ {};
     Texture rightTexture_ {};
     bool initialized_ {false};
+    Pose headPose_ {{0.0F, 1.6F, 0.0F}, {0.0F, 0.0F, 0.0F, 1.0F}};
+    float interPupillaryDistance_ {0.064F};
+    std::array<float, 3> headEulerDegrees_ {0.0F, 0.0F, 0.0F};
 };
 
 } // namespace AROS::DeviceEmulator
